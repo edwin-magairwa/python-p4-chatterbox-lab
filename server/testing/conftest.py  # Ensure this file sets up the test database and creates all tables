@@ -1,0 +1,20 @@
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import pytest
+from your_application.models import Base  # Adjust the import according to your project structure
+
+@pytest.fixture(scope='session')
+def test_db():
+    engine = create_engine('sqlite:///:memory:')
+    Base.metadata.create_all(engine)
+    connection = engine.connect()
+    yield connection
+    connection.close()
+
+@pytest.fixture(scope='function')
+def db_session(test_db):
+    transaction = test_db.begin()
+    session = sessionmaker(bind=test_db)()
+    yield session
+    session.close()
+    transaction.rollback()
